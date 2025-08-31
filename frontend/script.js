@@ -22,10 +22,12 @@ function renderDeck() {
   cards.forEach((card, i) => {
     const div = document.createElement("div");
     div.className = "card-back";
+    div.innerHTML = `<img src="img/dorso.jpeg" style="width:100%; height:100%; border-radius:8px;">`;
     div.onclick = () => chooseCard(i);
     deck.appendChild(div);
   });
 }
+
 
 function chooseCard(index) {
   if (chosen >= 3) return; // massimo 3 scelte
