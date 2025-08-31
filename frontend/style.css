@@ -12,6 +12,11 @@ h1 {
   margin-bottom: 20px;
 }
 
+h2 {
+  margin-top: 30px;
+  color: #444;
+}
+
 button {
   padding: 10px 20px;
   margin: 20px;
@@ -28,19 +33,62 @@ button:hover {
   background-color: #b07d3c;
 }
 
-#card-container img {
-  margin-top: 20px;
-  box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+#board {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 20px 0;
+}
+
+.slot {
+  width: 150px;
+  height: 250px;
+  border: 2px dashed #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #666;
+  background: #f9f9f9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.slot img {
+  width: 100%;
+  height: auto;
   border-radius: 8px;
 }
 
-#description {
-  max-width: 600px;
-  margin: 20px auto;
+#deck {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.card-back {
+  width: 100px;
+  height: 160px;
+  background: url("img/back.jpeg") center/cover no-repeat;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+  transition: transform 0.3s;
+}
+
+.card-back:hover {
+  transform: scale(1.05);
+}
+
+#interpretation {
+  max-width: 700px;
+  margin: 30px auto;
   text-align: left;
-  padding: 15px;
+  padding: 20px;
   background: white;
   border-radius: 8px;
   box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-  line-height: 1.5;
+  line-height: 1.6;
 }

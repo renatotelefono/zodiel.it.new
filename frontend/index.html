@@ -8,9 +8,21 @@
 </head>
 <body>
   <h1>Lettura dei Tarocchi</h1>
-  <button onclick="drawCard()">Pesca una carta</button>
-  <div id="card-container"></div>
-  <div id="description"></div>
+
+  <div id="board">
+    <div class="slot" id="past">Passato</div>
+    <div class="slot" id="present">Presente</div>
+    <div class="slot" id="future">Futuro</div>
+  </div>
+
+  <h2>Scegli 3 carte</h2>
+  <div id="deck"></div>
+
+  <div id="interpretation-section" style="display:none; margin-top:30px;">
+    <button id="interpret-btn">Interpretazione</button>
+    <div id="interpretation"></div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
