@@ -2,13 +2,19 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";        // 👈 aggiunto
+import fetch from "node-fetch";     // 👈 aggiunto
+
+dotenv.config();
+console.log("DEBUG ENV → REGION:", process.env.AZURE_REGION);
+console.log("DEBUG ENV → KEY:", process.env.AZURE_KEY ? "OK" : "MANCANTE");
 
 // Fix per __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // 📂 Percorso assoluto al frontend
 const frontendDir = path.join(__dirname, "../frontend");
@@ -47,6 +53,28 @@ app.get("/api/descrizione/:carta", (req, res) => {
     res.sendFile(filePath);
   } else {
     res.status(404).send("Descrizione non trovata");
+  }
+});
+
+// ✅ API: token Azure TTS
+app.get("/api/token", async (req, res) => {
+  try {
+    const response = await fetch(
+      `https://${process.env.AZURE_REGION}.api.cognitive.microsoft.com/sts/v1.0/issuetoken`,
+      {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.AZURE_KEY,
+          "Content-Length": "0"
+        }
+      }
+    );
+
+    const token = await response.text();
+    res.json({ token, region: process.env.AZURE_REGION });
+  } catch (err) {
+    console.error("Errore token Azure:", err);
+    res.status(500).send("Errore generazione token");
   }
 });
 

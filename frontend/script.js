@@ -1,7 +1,7 @@
 let cards = [];
 let chosen = 0;
-const slots = ["Passato", "Presente", "Futuro"];
-let chosenCards = []; // memorizza le 3 carte scelte
+const slots = ["Passato", "Presente", "Futuro"];   // in italiano
+let chosenCards = [];
 
 // Carica lista carte dal backend
 fetch("/api/carte")
@@ -32,7 +32,7 @@ function chooseCard(index) {
   const card = cards[index];
 
   const slotId = slots[chosen];
-  const slot = document.getElementById(slotId);
+  const slot = document.getElementById(slotId.toLowerCase()); // id html in minuscolo
   slot.innerHTML = `<img src="img/${card.name}.jpeg" 
     style="max-width:100%; ${card.reversed ? 'transform: rotate(180deg);' : ''}">`;
 
@@ -51,31 +51,66 @@ function showInterpretation() {
   const container = document.getElementById("interpretation");
   container.innerHTML = "<h2>Interpretazione</h2>";
 
-  chosenCards.forEach(card => {
+  let fullText = ""; // accumula il testo da leggere
+
+  chosenCards.forEach((card, idx) => {
     const filename = card.name + (card.reversed ? "_r" : "");
     fetch(`/api/descrizione/${filename}`)
       .then(resp => resp.text())
       .then(md => {
         const section = extractSection(md, card.position);
-        container.innerHTML += `<h3>${capitalize(card.position)}</h3>` + marked.parse(section);
+        const parsed = marked.parse(section);
+
+        container.innerHTML += `<h3>${card.position}</h3>` + parsed;
+
+        // aggiungiamo testo pulito per TTS
+        fullText += `${card.position}. ${section}\n`;
+
+        // quando l'ultima carta è caricata → avvia TTS
+        if (idx === chosenCards.length - 1) {
+          setTimeout(() => speakText(fullText), 500);
+        }
       })
       .catch(() => {
-        container.innerHTML += `<h3>${capitalize(card.position)}</h3><p>Nessuna descrizione trovata.</p>`;
+        container.innerHTML += `<h3>${card.position}</h3><p>Nessuna descrizione trovata.</p>`;
       });
   });
 }
 
 function extractSection(md, position) {
   const parts = md.split(/##\s+Significato nel/);
-  let key = "";
-  if (position === "Passato") key = "Passato";
-  if (position === "Presente") key = "Presente";
-  if (position === "Futuro") key = "Futuro";
-
-  const match = parts.find(p => p.trim().startsWith(key));
+  const match = parts.find(p => p.trim().startsWith(position));
   return match ? match.replace(/^.*?\n/, "") : md;
 }
 
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+// ====== AZURE TTS ======
+async function speakText(text) {
+  try {
+    // chiedi token temporaneo al backend
+    const resp = await fetch("/api/token");
+    const { token, region } = await resp.json();
+
+    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region);
+    speechConfig.speechSynthesisVoiceName = "it-IT-ElsaNeural"; // voce italiana (puoi cambiarla)
+
+    const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
+
+    synthesizer.speakTextAsync(
+      text,
+      result => {
+        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+          console.log("✅ Sintesi completata");
+        } else {
+          console.error("Errore TTS:", result.errorDetails);
+        }
+        synthesizer.close();
+      },
+      err => {
+        console.error("Errore TTS:", err);
+        synthesizer.close();
+      }
+    );
+  } catch (err) {
+    console.error("Errore richiesta token:", err);
+  }
 }
