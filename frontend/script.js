@@ -1,6 +1,6 @@
 let cards = [];
 let chosen = 0;
-const slots = ["past", "present", "future"];
+const slots = ["Passato", "Presente", "Futuro"];
 let chosenCards = []; // memorizza le 3 carte scelte
 
 // Carica lista carte dal backend
@@ -68,9 +68,9 @@ function showInterpretation() {
 function extractSection(md, position) {
   const parts = md.split(/##\s+Significato nel/);
   let key = "";
-  if (position === "past") key = "Passato";
-  if (position === "present") key = "Presente";
-  if (position === "future") key = "Futuro";
+  if (position === "Passato") key = "Passato";
+  if (position === "Presente") key = "Presente";
+  if (position === "Futuro") key = "Futuro";
 
   const match = parts.find(p => p.trim().startsWith(key));
   return match ? match.replace(/^.*?\n/, "") : md;
