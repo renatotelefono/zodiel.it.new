@@ -47,34 +47,45 @@ function chooseCard(index) {
   }
 }
 
-function showInterpretation() {
+// ====== INTERPRETAZIONE ORDINATA ======
+async function showInterpretation() {
   const container = document.getElementById("interpretation");
   container.innerHTML = "<h2>Interpretazione</h2>";
 
-  let fullText = ""; // accumula il testo da leggere
+  let fullText = "";
 
-  chosenCards.forEach((card, idx) => {
+  // percorriamo le carte in ordine scelto
+  for (const card of chosenCards) {
     const filename = card.name + (card.reversed ? "_r" : "");
-    fetch(`/api/descrizione/${filename}`)
-      .then(resp => resp.text())
-      .then(md => {
-        const section = extractSection(md, card.position);
-        const parsed = marked.parse(section);
+    try {
+      const resp = await fetch(`/api/descrizione/${filename}`);
+      if (!resp.ok) throw new Error("File non trovato");
+      const md = await resp.text();
 
-        container.innerHTML += `<h3>${card.position}</h3>` + parsed;
+      const section = extractSection(md, card.position);
+      const parsed = marked.parse(section);
 
-        // aggiungiamo testo pulito per TTS
-        fullText += `${card.position}. ${section}\n`;
+      // Mostra a video
+      container.innerHTML += `<h3>${card.position}</h3>` + parsed;
 
-        // quando l'ultima carta è caricata → avvia TTS
-        if (idx === chosenCards.length - 1) {
-          setTimeout(() => speakText(fullText), 500);
-        }
-      })
-      .catch(() => {
-        container.innerHTML += `<h3>${card.position}</h3><p>Nessuna descrizione trovata.</p>`;
-      });
-  });
+      // Prepara testo pulito per TTS
+      const cleanSection = section
+        .replace(/^---$/gm, "")   // elimina linee con ---
+        .replace(/[#*_>`]/g, "")  // elimina simboli markdown
+        .trim();
+
+      fullText += `${card.position}. ${cleanSection}\n`;
+
+    } catch (err) {
+      console.error("Errore descrizione:", err);
+      container.innerHTML += `<h3>${card.position}</h3><p>Nessuna descrizione trovata.</p>`;
+    }
+  }
+
+  // Solo alla fine → avvia TTS
+  if (fullText.trim() !== "") {
+    speakText(fullText);
+  }
 }
 
 function extractSection(md, position) {
