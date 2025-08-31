@@ -1,9 +1,10 @@
 {
   "name": "zodiel_it_new",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node backend/server.js"
   },
   "repository": {
     "type": "git",
