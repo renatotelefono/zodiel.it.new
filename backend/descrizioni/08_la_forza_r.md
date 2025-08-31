@@ -1,4 +1,4 @@
-# La Forza (8/11) – Rovesciata
+# La Forza (8) – Rovesciata
 
 La Forza rovesciata rappresenta insicurezza, impulsività e difficoltà a gestire emozioni intense. Quando appare al contrario, segnala che la fiducia in sé stessi potrebbe vacillare e che la paura o la rabbia rischiano di prevalere sulla calma interiore.  
 Questa carta invita a riflettere su quali situazioni o emozioni stanno minando la tua stabilità, ricordandoti che la vera forza nasce dalla padronanza di sé e non dal tentativo di controllare gli altri con aggressività o imposizione.

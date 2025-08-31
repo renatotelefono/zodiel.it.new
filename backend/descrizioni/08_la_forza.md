@@ -1,4 +1,4 @@
-# La Forza (8/11)
+# La Forza (8)
 
 La Forza è la carta del coraggio, della resilienza e del dominio delle emozioni. Simboleggia il potere interiore che nasce dalla calma e dalla consapevolezza, piuttosto che dalla forza bruta. È l’archetipo della padronanza di sé, della compassione e della capacità di affrontare sfide difficili con equilibrio e determinazione.  
 Quando appare, indica che la vera forza non risiede nell’aggressività, ma nella capacità di gestire le proprie emozioni e affrontare gli ostacoli con pazienza e fiducia in sé stessi.

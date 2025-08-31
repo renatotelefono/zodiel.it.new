@@ -1,4 +1,4 @@
-# La Giustizia (8/11) – Rovesciata
+# La Giustizia (11) – Rovesciata
 
 La Giustizia rovesciata simboleggia ingiustizia, confusione e mancanza di responsabilità. Quando appare al contrario, segnala che la verità potrebbe essere distorta, che le decisioni prese non sono imparziali o che qualcuno evita di assumersi le proprie responsabilità.  
 Questa carta invita a riflettere su quali aree della vita sono influenzate da squilibri, bugie o autoinganni, ricordando che negare la realtà porta solo a ritardi e difficoltà maggiori.

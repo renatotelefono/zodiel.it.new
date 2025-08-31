@@ -1,0 +1,23 @@
+{
+  "name": "zodiel_it_new",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/renatotelefono/zodiel.it.new.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/renatotelefono/zodiel.it.new/issues"
+  },
+  "homepage": "https://github.com/renatotelefono/zodiel.it.new#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

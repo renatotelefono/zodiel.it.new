@@ -1,4 +1,4 @@
-# La Giustizia (8/11)
+# La Giustizia (11)
 
 La Giustizia è la carta dell’equilibrio, della verità e delle conseguenze delle proprie azioni. Simboleggia il principio di causa ed effetto, l’importanza di scelte ponderate e di decisioni prese con imparzialità. È l’archetipo della responsabilità e della chiarezza interiore, che invita a guardare la realtà con occhi sinceri e a riconoscere le proprie responsabilità.  
 Quando questa carta appare, suggerisce di valutare con attenzione ogni situazione, affidandosi alla logica, all’onestà e alla capacità di discernimento per trovare la strada più giusta.
