@@ -3,6 +3,10 @@ let chosen = 0;
 const slots = ["Passato", "Presente", "Futuro"];   // in italiano
 let chosenCards = [];
 
+// --- Stato riproduzione ---
+let isReading = false;
+let audioEl = null;
+
 // Carica lista carte dal backend
 fetch("/api/carte")
   .then(resp => resp.json())
@@ -28,7 +32,6 @@ function renderDeck() {
   });
 }
 
-
 function chooseCard(index) {
   if (chosen >= 3) return; // massimo 3 scelte
   const card = cards[index];
@@ -51,6 +54,8 @@ function chooseCard(index) {
 
 // ====== INTERPRETAZIONE ORDINATA ======
 async function showInterpretation() {
+  if (isReading) return; // evita doppio avvio
+
   const container = document.getElementById("interpretation");
   container.innerHTML = "<h2>Interpretazione</h2>";
 
@@ -84,10 +89,8 @@ async function showInterpretation() {
     }
   }
 
-  // Solo alla fine → avvia TTS
-  if (fullText.trim() !== "") {
-    speakText(fullText);
-  }
+  ensureControls();          // crea i pulsanti Pausa/Riprendi + Nuova lettura
+  await speakText(fullText); // avvia lettura
 }
 
 function extractSection(md, position) {
@@ -96,34 +99,152 @@ function extractSection(md, position) {
   return match ? match.replace(/^.*?\n/, "") : md;
 }
 
-// ====== AZURE TTS ======
-async function speakText(text) {
-  try {
-    // chiedi token temporaneo al backend
-    const resp = await fetch("/api/token");
-    const { token, region } = await resp.json();
+// ====== CONTROLLI UI ======
+function ensureControls() {
+  const section = document.getElementById("interpretation-section");
 
-    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region);
-    speechConfig.speechSynthesisVoiceName = "it-IT-ElsaNeural"; // voce italiana (puoi cambiarla)
+  // crea <audio> nascosto se non presente
+  audioEl = document.getElementById("tts-audio");
+  if (!audioEl) {
+    audioEl = document.createElement("audio");
+    audioEl.id = "tts-audio";
+    audioEl.style.display = "none";
+    section.appendChild(audioEl);
 
-    const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
-
-    synthesizer.speakTextAsync(
-      text,
-      result => {
-        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-          console.log("✅ Sintesi completata");
-        } else {
-          console.error("Errore TTS:", result.errorDetails);
-        }
-        synthesizer.close();
-      },
-      err => {
-        console.error("Errore TTS:", err);
-        synthesizer.close();
-      }
-    );
-  } catch (err) {
-    console.error("Errore richiesta token:", err);
+    // fine riproduzione -> ripristina UI
+    audioEl.addEventListener("ended", onAudioEnded);
   }
+
+  // Pulsante Pausa/Riprendi
+  let pauseBtn = document.getElementById("pause-btn");
+  if (!pauseBtn) {
+    pauseBtn = document.createElement("button");
+    pauseBtn.id = "pause-btn";
+    pauseBtn.textContent = "Pausa";
+    pauseBtn.style.marginRight = "8px";
+    pauseBtn.onclick = togglePause;
+    section.appendChild(pauseBtn);
+  }
+  pauseBtn.style.display = "inline-block";
+  pauseBtn.textContent = "Pausa";
+
+  // Pulsante Nuova lettura
+  let newBtn = document.getElementById("new-reading-btn");
+  if (!newBtn) {
+    newBtn = document.createElement("button");
+    newBtn.id = "new-reading-btn";
+    newBtn.textContent = "Nuova lettura";
+    newBtn.onclick = () => { stopAudio(); resetReading(); };
+    section.appendChild(newBtn);
+  }
+}
+
+function togglePause() {
+  if (!audioEl) return;
+  const pauseBtn = document.getElementById("pause-btn");
+  if (audioEl.paused) {
+    audioEl.play().catch(err => console.error("Ripresa non riuscita:", err));
+    pauseBtn.textContent = "Pausa";
+  } else {
+    audioEl.pause();
+    pauseBtn.textContent = "Riprendi";
+  }
+}
+
+function onAudioEnded() {
+  isReading = false;
+  const interpretBtn = document.getElementById("interpret-btn");
+  if (interpretBtn) interpretBtn.disabled = false;
+
+  const pauseBtn = document.getElementById("pause-btn");
+  if (pauseBtn) pauseBtn.style.display = "none";
+}
+
+function stopAudio() {
+  if (audioEl) {
+    try {
+      audioEl.pause();
+      audioEl.src = "";
+      audioEl.load();
+    } catch (e) {
+      console.warn("Errore stop audio:", e);
+    }
+  }
+  onAudioEnded();
+}
+
+// ====== RESET ======
+function resetReading() {
+  chosen = 0;
+  chosenCards = [];
+
+  // svuota slot
+  slots.forEach(s => {
+    document.getElementById(s.toLowerCase()).innerHTML = "";
+  });
+
+  // svuota interpretazione
+  document.getElementById("interpretation").innerHTML = "";
+
+  // nascondi sezione interpretazione
+  document.getElementById("interpretation-section").style.display = "none";
+
+  // ricostruisci il mazzo
+  renderDeck();
+}
+
+// ====== SINTESI + RIPRODUZIONE (Azure TTS -> MP3 -> <audio>) ======
+async function speakText(text) {
+  const interpretBtn = document.getElementById("interpret-btn");
+  if (interpretBtn) interpretBtn.disabled = true;
+  isReading = true;
+
+  try {
+    // 1) prendi token e regione dal tuo server
+    const tk = await fetch("/api/token");
+    if (!tk.ok) throw new Error("Token non ottenuto");
+    const { token, region } = await tk.json();
+
+    // 2) SSML per la voce italiana
+    const ssml =
+      `<speak version='1.0' xml:lang='it-IT'>
+         <voice name='it-IT-ElsaNeural'>${escapeXml(text)}</voice>
+       </speak>`;
+
+    // 3) chiama endpoint TTS Azure per ottenere MP3
+    const ttsResp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/ssml+xml",
+        "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3"
+      },
+      body: ssml
+    });
+
+    if (!ttsResp.ok) {
+      throw new Error(`Errore TTS Azure: ${ttsResp.status} ${ttsResp.statusText}`);
+    }
+
+    const arrayBuf = await ttsResp.arrayBuffer();
+    const blob = new Blob([arrayBuf], { type: "audio/mpeg" });
+    const url = URL.createObjectURL(blob);
+
+    // 4) riproduci con <audio> (così Pausa/Riprendi funzionano)
+    ensureControls();                 // assicura che audio/pulsanti esistano
+    audioEl.src = url;
+    await audioEl.play();
+
+  } catch (err) {
+    console.error("Errore durante la lettura:", err);
+    stopAudio(); // ripristina UI
+  }
+}
+
+// Escape semplice per l’SSML
+function escapeXml(s) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
