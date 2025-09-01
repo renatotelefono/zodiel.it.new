@@ -55,10 +55,20 @@ button:hover {
 }
 
 .slot img {
-  width: 100%;
+  width: 180px;   /* più grande delle carte del mazzo */
   height: auto;
   border-radius: 8px;
+  display: block;
+  margin: 0 auto 8px auto;
 }
+
+.caption {
+  font-size: 14px;
+  font-weight: bold;
+  color: #4a2f16;
+  margin-top: 5px;
+}
+
 
 #deck {
   display: flex;
@@ -71,7 +81,7 @@ button:hover {
 .card-back {
   width: 100px;
   height: 160px;
-  background: url("img/back.jpeg") center/cover no-repeat;
+  background: url("back.jpeg") center/cover no-repeat;
   border-radius: 8px;
   cursor: pointer;
   box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
@@ -81,7 +91,7 @@ button:hover {
 .card-back {
   width: 100px;
   height: 160px;
-  background: url("img/dorso.jpeg") center/cover no-repeat; /* 👈 usa il dorso */
+  background: url("dorso.jpeg") center/cover no-repeat; /* 👈 usa il dorso */
   border-radius: 8px;
   cursor: pointer;
   box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
