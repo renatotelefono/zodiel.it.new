@@ -6,6 +6,8 @@ let chosenCards = [];
 // --- Stato riproduzione ---
 let isReading = false;
 let audioEl = null;
+let audioQueue = [];
+let currentTrack = 0;
 
 // Carica lista carte dal backend
 fetch("/api/carte")
@@ -59,38 +61,38 @@ async function showInterpretation() {
   const container = document.getElementById("interpretation");
   container.innerHTML = "<h2>Interpretazione</h2>";
 
-  let fullText = "";
+  // svuota eventuali code precedenti
+  audioQueue = [];
+  currentTrack = 0;
 
   // percorriamo le carte in ordine scelto
   for (const card of chosenCards) {
     const filename = card.name + (card.reversed ? "_r" : "");
     try {
+      // testo a schermo (markdown -> html)
       const resp = await fetch(`/api/descrizione/${filename}`);
       if (!resp.ok) throw new Error("File non trovato");
       const md = await resp.text();
 
       const section = extractSection(md, card.position);
       const parsed = marked.parse(section);
-
-      // Mostra a video
       container.innerHTML += `<h3>${card.position}</h3>` + parsed;
 
-      // Prepara testo pulito per TTS
-      const cleanSection = section
-        .replace(/^---$/gm, "")   // elimina linee con ---
-        .replace(/[#*_>`]/g, "")  // elimina simboli markdown
-        .trim();
-
-      fullText += `${card.position}. ${cleanSection}\n`;
+      // audio: /audio/<nome>[_r]__<Posizione>.mp3
+      const audioUrl = `/audio/${encodeURIComponent(filename)}__${encodeURIComponent(card.position)}.mp3`;
+      audioQueue.push(audioUrl);
 
     } catch (err) {
       console.error("Errore descrizione:", err);
       container.innerHTML += `<h3>${card.position}</h3><p>Nessuna descrizione trovata.</p>`;
+      // anche se manca la descrizione, proviamo comunque a riprodurre l'audio se esiste
+      const fallbackUrl = `/audio/${encodeURIComponent(filename)}__${encodeURIComponent(card.position)}.mp3`;
+      audioQueue.push(fallbackUrl);
     }
   }
 
   ensureControls();          // crea i pulsanti Pausa/Riprendi + Nuova lettura
-  await speakText(fullText); // avvia lettura
+  await playAudioQueue();    // avvia riproduzione sequenziale MP3
 }
 
 function extractSection(md, position) {
@@ -110,10 +112,24 @@ function ensureControls() {
     audioEl.id = "tts-audio";
     audioEl.style.display = "none";
     section.appendChild(audioEl);
-
-    // fine riproduzione -> ripristina UI
-    audioEl.addEventListener("ended", onAudioEnded);
   }
+
+  // handler: quando finisce una traccia, passa alla successiva
+  audioEl.onended = () => {
+    currentTrack++;
+    if (currentTrack < audioQueue.length) {
+      audioEl.src = audioQueue[currentTrack];
+      audioEl.play().catch(err => console.error("Riproduzione non riuscita:", err));
+    } else {
+      onAudioEnded();
+    }
+  };
+
+  // se un file non si carica (404, ecc.), salta al prossimo
+  audioEl.onerror = () => {
+    console.warn("Errore caricamento audio, salto al prossimo:", audioEl.src);
+    audioEl.onended(); // riusa la stessa logica di avanzamento
+  };
 
   // Pulsante Pausa/Riprendi
   let pauseBtn = document.getElementById("pause-btn");
@@ -170,6 +186,8 @@ function stopAudio() {
       console.warn("Errore stop audio:", e);
     }
   }
+  audioQueue = [];
+  currentTrack = 0;
   onAudioEnded();
 }
 
@@ -193,58 +211,26 @@ function resetReading() {
   renderDeck();
 }
 
-// ====== SINTESI + RIPRODUZIONE (Azure TTS -> MP3 -> <audio>) ======
-async function speakText(text) {
+// ====== RIPRODUZIONE SEQUENZIALE DI MP3 STATICI ======
+async function playAudioQueue() {
   const interpretBtn = document.getElementById("interpret-btn");
   if (interpretBtn) interpretBtn.disabled = true;
   isReading = true;
 
   try {
-    // 1) prendi token e regione dal tuo server
-    const tk = await fetch("/api/token");
-    if (!tk.ok) throw new Error("Token non ottenuto");
-    const { token, region } = await tk.json();
+    ensureControls();
+    currentTrack = 0;
 
-    // 2) SSML per la voce italiana
-    const ssml =
-      `<speak version='1.0' xml:lang='it-IT'>
-         <voice name='it-IT-ElsaNeural'>${escapeXml(text)}</voice>
-       </speak>`;
-
-    // 3) chiama endpoint TTS Azure per ottenere MP3
-    const ttsResp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/ssml+xml",
-        "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3"
-      },
-      body: ssml
-    });
-
-    if (!ttsResp.ok) {
-      throw new Error(`Errore TTS Azure: ${ttsResp.status} ${ttsResp.statusText}`);
+    if (audioQueue.length === 0) {
+      console.warn("Nessun file audio in coda");
+      onAudioEnded();
+      return;
     }
 
-    const arrayBuf = await ttsResp.arrayBuffer();
-    const blob = new Blob([arrayBuf], { type: "audio/mpeg" });
-    const url = URL.createObjectURL(blob);
-
-    // 4) riproduci con <audio> (così Pausa/Riprendi funzionano)
-    ensureControls();                 // assicura che audio/pulsanti esistano
-    audioEl.src = url;
+    audioEl.src = audioQueue[currentTrack];
     await audioEl.play();
-
   } catch (err) {
-    console.error("Errore durante la lettura:", err);
+    console.error("Errore durante la riproduzione:", err);
     stopAudio(); // ripristina UI
   }
-}
-
-// Escape semplice per l’SSML
-function escapeXml(s) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
