@@ -90,7 +90,11 @@ async function showInterpretation() {
       audioQueue.push(fallbackUrl);
     }
   }
-
+const dlBtn = document.getElementById("download-pdf-btn");
+if (dlBtn) {
+  dlBtn.style.display = "inline-block";
+  dlBtn.onclick = downloadPdf;
+}
   ensureControls();          // crea i pulsanti Pausa/Riprendi + Nuova lettura
   await playAudioQueue();    // avvia riproduzione sequenziale MP3
 }
@@ -233,4 +237,116 @@ async function playAudioQueue() {
     console.error("Errore durante la riproduzione:", err);
     stopAudio(); // ripristina UI
   }
+}
+async function downloadPdf() {
+  if (!chosenCards || chosenCards.length !== 3) return;
+
+  // 1) Costruisco il DOM temporaneo da convertire
+  const pdfEl = document.createElement("div");
+  pdfEl.id = "pdf-doc";
+  Object.assign(pdfEl.style, {
+    padding: "24px",
+    background: "#ffffff",
+    // larghezza A4 ~ 794px a 96dpi (8.27in)
+    width: "794px",
+    maxWidth: "794px",
+    boxSizing: "border-box",
+    fontFamily: "Arial, sans-serif",
+    color: "#222",
+    lineHeight: "1.35"
+  });
+
+  // Stili utili per i page-break e resa stampa
+  const style = document.createElement("style");
+  style.textContent = `
+    #pdf-doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+    #pdf-doc img { max-width: 100%; height: auto; }
+    #pdf-doc .page-break { page-break-before: always; }
+    #pdf-doc .avoid-break { page-break-inside: avoid; }
+    #pdf-doc h1, #pdf-doc h2, #pdf-doc h3 { page-break-after: avoid; }
+  `;
+  pdfEl.appendChild(style);
+
+  const dateStr = new Date().toLocaleString("it-IT");
+
+  const cardsHtml = chosenCards.map(c => {
+    const label = `${c.position} — ${niceName(c.name)} ${c.reversed ? "(rovesciata)" : "(diritta)"}`;
+    return `
+      <div class="avoid-break" style="text-align:center; margin:0 8px 12px;">
+        <div style="font-weight:600; margin-bottom:6px;">${label}</div>
+        <img src="img/${c.name}.jpeg" style="${c.reversed ? "transform: rotate(180deg);" : ""}; width:180px;">
+      </div>
+    `;
+  }).join("");
+
+  // Prendo l'interpretazione così com'è a schermo
+  const interpretationHtml = document.getElementById("interpretation")?.innerHTML || "";
+
+  pdfEl.innerHTML += `
+    <h1 style="text-align:center; margin:0 0 12px 0;">Lettura dei Tarocchi</h1>
+    <div style="text-align:center; font-size:12px; margin-bottom:14px;">Generata il ${dateStr}</div>
+
+    <div class="avoid-break" style="display:flex; justify-content:center; gap:12px; margin:8px 0 14px 0; flex-wrap:wrap;">
+      ${cardsHtml}
+    </div>
+
+    <hr style="margin:14px 0; border:none; border-top:1px solid #ccc;">
+
+    <div id="pdf-interpretation">${interpretationHtml}</div>
+  `;
+
+  document.body.appendChild(pdfEl);
+
+  // Forza un page-break prima di grossi titoli interni (se presenti)
+  pdfEl.querySelectorAll('#pdf-interpretation h2, #pdf-interpretation h3')
+    .forEach((h, i) => {
+      if (i > 0) {
+        const br = document.createElement('div');
+        br.className = 'page-break';
+        h.parentNode.insertBefore(br, h);
+      }
+    });
+
+  // 2) Aspetto il caricamento di tutte le immagini (carte + eventuali immagini nel testo)
+  await waitForImages(pdfEl);
+
+  // 3) Esporto con html2pdf abilitando i page-break
+  const fileName = `lettura-tarocchi_${new Date().toISOString().slice(0,10)}.pdf`;
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: fileName,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, scrollY: 0, backgroundColor: "#ffffff" },
+    jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["css", "legacy"], avoid: [".avoid-break"] }
+  };
+
+  try {
+    await html2pdf().set(opt).from(pdfEl).save();
+  } finally {
+    pdfEl.remove();
+  }
+}
+
+// Helper: attende il caricamento di tutte le immagini dentro un nodo
+function waitForImages(root) {
+  const imgs = Array.from(root.querySelectorAll('img'));
+  if (imgs.length === 0) return Promise.resolve();
+  return Promise.all(
+    imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => {
+      img.onload = img.onerror = () => res();
+    }))
+  );
+}
+
+function niceName(fileBase) {
+  return fileBase.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
+}
+
+
+function niceName(fileBase) {
+  // opzionale: rende più leggibile il nome file ("il_matto" -> "Il Matto")
+  return fileBase
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, m => m.toUpperCase());
 }

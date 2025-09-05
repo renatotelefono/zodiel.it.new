@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="style.css">
   <!-- Markdown parser -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <!-- Azure Speech SDK -->
 
 </head>
@@ -22,9 +23,13 @@
   <div id="deck"></div>
 
   <div id="interpretation-section" style="display:none; margin-top:30px;">
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
     <button id="interpret-btn">Interpretazione</button>
-    <div id="interpretation"></div>
+    <button id="download-pdf-btn" style="display:none;">Scarica PDF</button>
   </div>
+  <div id="interpretation"></div>
+</div>
+
 
   <script src="script.js"></script>
 </body>
