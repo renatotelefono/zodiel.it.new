@@ -1,43 +1,119 @@
+
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Lettura Tarocchi</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Markdown parser -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-  <!-- Azure Speech SDK -->
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seleziona lingua / Choose language</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --accent-2: #34d399;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: radial-gradient(1200px 800px at 50% 20%, #1f2937, var(--bg));
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: 1.4;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 28px;
+      width: min(560px, 92vw);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 0 40px rgba(255,255,255,0.03);
+      backdrop-filter: blur(6px);
+      text-align: center;
+    }
+    h1 {
+      font-size: clamp(24px, 4vw, 32px);
+      margin: 0 0 6px;
+      letter-spacing: 0.2px;
+    }
+    p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      transition: transform .08s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      will-change: transform;
+    }
+    a.btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.28);
+      border-color: rgba(255,255,255,0.22);
+    }
+    .en { background: linear-gradient(180deg, rgba(96,165,250,0.18), rgba(96,165,250,0.06)); }
+    .it { background: linear-gradient(180deg, rgba(52,211,153,0.18), rgba(52,211,153,0.06)); }
+    .flag {
+      width: 22px; height: 16px;
+      border-radius: 2px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+    }
+    .note {
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: .85;
+    }
+  </style>
 </head>
 <body>
-  <h1>Lettura dei Tarocchi</h1>
-
-  <div id="board">
-    <div class="slot" id="passato">Passato</div>
-    <div class="slot" id="presente">Presente</div>
-    <div class="slot" id="futuro">Futuro</div>
-  </div>
-
-  <h2>Scegli 3 carte</h2>
-  <div style="margin:10px 0;">
-  <button id="shuffle-btn">Mischia le carte</button>
-</div>
-<div id="deck"></div>
-
-  <div id="deck"></div>
-
-<div id="interpretation-section" style="display:none; margin-top:30px;">
-  <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center;">
-    <button id="interpret-btn">Interpretazione</button>
-    <button id="download-pdf-btn" style="display:none;">Scarica PDF</button>
-  </div>
-  <div id="interpretation"></div>
-</div>
-
-</div>
-
-
-  <script src="script.js"></script>
+  <main class="card" role="main" aria-label="Language selection">
+    <h1>Seleziona la lingua</h1>
+    <p>Scegli la versione dell'applicazione</p>
+    <div class="btns">
+      <a class="btn en" href="index_en.html" id="btn-en" aria-label="English version">
+        <svg class="flag" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="60" height="40" fill="#012169"/>
+          <polygon points="0,0 25,0 60,20 60,25 35,25 0,7" fill="#fff"/>
+          <polygon points="60,0 35,0 0,20 0,25 25,25 60,7" fill="#fff"/>
+          <polygon points="0,0 23,0 60,19 60,21 37,21 0,3" fill="#C8102E"/>
+          <polygon points="60,0 37,0 0,19 0,21 23,21 60,3" fill="#C8102E"/>
+          <rect x="25" width="10" height="40" fill="#fff"/>
+          <rect y="15" width="60" height="10" fill="#fff"/>
+          <rect x="27" width="6" height="40" fill="#C8102E"/>
+          <rect y="17" width="60" height="6" fill="#C8102E"/>
+        </svg>
+        english version
+      </a>
+      <a class="btn it" href="index_it.html" id="btn-it" aria-label="Versione italiana">
+        <svg class="flag" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="60" height="40" fill="#ffffff"/>
+          <rect width="20" height="40" x="0" y="0" fill="#009246"/>
+          <rect width="20" height="40" x="40" y="0" fill="#CE2B37"/>
+        </svg>
+        versione italiana
+      </a>
+    </div>
+    <div class="note">Suggerimento: puoi anche aprire direttamente <code>/en</code> se hai configurato il routing.</div>
+  </main>
 </body>
 </html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Lettura Tarocchi</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <!-- Azure Speech SDK -->
+
+</head>
+<body>
+  <h1>Lettura dei Tarocchi</h1>
+
+  <div id="board">
+    <div class="slot" id="passato">Passato</div>
+    <div class="slot" id="presente">Presente</div>
+    <div class="slot" id="futuro">Futuro</div>
+  </div>
+
+  <h2>Scegli 3 carte</h2>
+  <div style="margin:10px 0;">
+  <button id="shuffle-btn">Mischia le carte</button>
+</div>
+<div id="deck"></div>
+
+  <div id="deck"></div>
+
+<div id="interpretation-section" style="display:none; margin-top:30px;">
+  <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center;">
+    <button id="interpret-btn">Interpretazione</button>
+    <button id="download-pdf-btn" style="display:none;">Scarica PDF</button>
+  </div>
+  <div id="interpretation"></div>
+</div>
+
+</div>
+
+
+  <script src="scripts_it.js"></script>
+</body>
+</html>

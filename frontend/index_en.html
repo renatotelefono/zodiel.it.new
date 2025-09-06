@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tarot Reading</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <h1>Tarot Reading</h1>
+
+  <div id="board">
+    <div class="slot" id="past">Past</div>
+    <div class="slot" id="present">Present</div>
+    <div class="slot" id="future">Future</div>
+  </div>
+
+  <h2>Choose 3 cards</h2>
+  <div style="margin:10px 0;">
+    <button id="shuffle-btn">Shuffle the cards</button>
+  </div>
+
+  <div id="deck"></div>
+
+  <div id="interpretation-section" style="display:none; margin-top:30px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center;">
+      <button id="interpret-btn">Interpret</button>
+      <button id="download-pdf-btn" style="display:none;">Download PDF</button>
+    </div>
+    <div id="interpretation"></div>
+  </div>
+
+  <script src="scripts_en.js"></script>
+</body>
+</html>

@@ -13,3 +13,5 @@ Thumbs.db
 dist/
 build/
 .env
+# Google Cloud TTS service account key (ignore anywhere in repo)
+**/goggle-tts-467809-8c23f1a0b869.json
