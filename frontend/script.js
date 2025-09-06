@@ -350,3 +350,111 @@ function niceName(fileBase) {
     .replace(/_/g, " ")
     .replace(/\b\w/g, m => m.toUpperCase());
 }
+// --- Effetto grafico "pila su una carta e ritorno" ---
+let isPileAnimating = false;
+
+function getDeckContainer() {
+  return document.getElementById("deck");
+}
+function getDeckItems() {
+  const deck = getDeckContainer();
+  return deck ? Array.from(deck.children) : [];
+}
+
+function pileEffect(anchorIndex = 0, opts = {}) {
+  if (isPileAnimating) return;
+
+  const container = getDeckContainer();
+  const items = getDeckItems();
+  if (!container || items.length < 2) return;
+
+  const {
+    collapseDuration = 420, // ms: fase di “collasso”
+    expandDuration = 520,   // ms: fase di ritorno
+    easingOut = "cubic-bezier(.2,.7,.2,1)",
+    easingIn = "cubic-bezier(.2,.7,.2,1)",
+    stagger = 10,           // ms: scaglionamento tra carte
+    hold = 120,             // ms: pausa quando sono sovrapposte
+    addTilt = true          // piccola rotazione casuale per realismo
+  } = opts;
+
+  const anchor = items[Math.max(0, Math.min(anchorIndex, items.length - 1))];
+
+  // Salviamo le posizioni iniziali (viewport)
+  const startRects = items.map(el => el.getBoundingClientRect());
+  const anchorRect = anchor.getBoundingClientRect();
+
+  isPileAnimating = true;
+  const btn = document.getElementById("shuffle-btn");
+  if (btn) btn.disabled = true;
+
+  // --- Fase 1: collasso verso la carta "ancora"
+  let collapsedCount = 0;
+
+  items.forEach((el, i) => {
+    const r = startRects[i];
+    const dx = (anchorRect.left + anchorRect.width / 2) - (r.left + r.width / 2);
+    const dy = (anchorRect.top + anchorRect.height / 2) - (r.top + r.height / 2);
+    const rot = addTilt ? ((Math.random() * 2 - 1) * 5).toFixed(2) : 0; // ±5°
+
+    el.style.willChange = "transform";
+    el.style.pointerEvents = "none";
+    // aiutiamo lo stacking durante il volo
+    if (!el.style.position) el.style.position = "relative";
+    el.style.zIndex = String(100 + i);
+
+    // Impostiamo transizione e destinazione (pila)
+    el.style.transition = `transform ${collapseDuration}ms ${easingOut} ${i * stagger}ms`;
+    el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+
+    const onCollapseEnd = (ev) => {
+      if (ev.propertyName !== "transform") return;
+      el.removeEventListener("transitionend", onCollapseEnd);
+      collapsedCount++;
+
+      if (collapsedCount === items.length) {
+        // --- Pausa breve quando sono tutte sovrapposte
+        setTimeout(() => {
+          // --- Fase 2: ritorno morbido alle posizioni originali
+          let returned = 0;
+          items.forEach((el2, j) => {
+            el2.style.transition = `transform ${expandDuration}ms ${easingIn} ${j * stagger}ms`;
+            el2.style.transform = "translate(0px, 0px) rotate(0deg)";
+
+            const onExpandEnd = (e2) => {
+              if (e2.propertyName !== "transform") return;
+              el2.removeEventListener("transitionend", onExpandEnd);
+              // pulizia
+              el2.style.transition = "";
+              el2.style.transform = "";
+              el2.style.willChange = "";
+              el2.style.pointerEvents = "";
+              el2.style.zIndex = "";
+
+              returned++;
+              if (returned === items.length) {
+                isPileAnimating = false;
+                if (btn) btn.disabled = false;
+              }
+            };
+            el2.addEventListener("transitionend", onExpandEnd);
+          });
+        }, hold);
+      }
+    };
+    el.addEventListener("transitionend", onCollapseEnd);
+  });
+}
+
+// Collega il pulsante esistente a questo effetto
+(function wirePileButton(){
+  const btn = document.getElementById("shuffle-btn");
+  if (!btn) return;
+  btn.onclick = () => pileEffect(0, {
+    collapseDuration: 420,
+    expandDuration: 520,
+    stagger: 10,
+    hold: 120,
+    addTilt: true
+  });
+})();
